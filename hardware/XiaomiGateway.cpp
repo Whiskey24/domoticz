@@ -104,6 +104,66 @@ void XiaomiGateway::RemoveFromGatewayList()
 	}
 }
 
+// Use this function to get local ip addresses via getifaddrs when boost asio approach fails
+// Adds the addresses found to the supplied vector and returns the count
+// Code from Stack Overflow - https://stackoverflow.com/questions/2146191
+int get_local_ipaddr(std::vector<std::string>& ip_addrs)
+{
+    struct ifaddrs *myaddrs, *ifa;
+    void *in_addr;
+    char buf[64];
+	int count = 0;
+
+    if(getifaddrs(&myaddrs) != 0)
+    {
+		_log.Log(LOG_ERROR, "getifaddrs failed! (when trying to determine local ip address)");
+        perror("getifaddrs");
+        exit(1);
+    }
+
+    for (ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
+    {
+        if (ifa->ifa_addr == NULL)
+            continue;
+        if (!(ifa->ifa_flags & IFF_UP))
+            continue;
+
+        switch (ifa->ifa_addr->sa_family)
+        {
+            case AF_INET:
+            {
+                struct sockaddr_in *s4 = (struct sockaddr_in *)ifa->ifa_addr;
+                in_addr = &s4->sin_addr;
+                break;
+            }
+
+            case AF_INET6:
+            {
+                struct sockaddr_in6 *s6 = (struct sockaddr_in6 *)ifa->ifa_addr;
+                in_addr = &s6->sin6_addr;
+                break;
+            }
+
+            default:
+                continue;
+        }
+
+        if (!inet_ntop(ifa->ifa_addr->sa_family, in_addr, buf, sizeof(buf)))
+        {
+			_log.Log(LOG_ERROR, "Could not convert to IP address, inet_ntop failed for interface %s", ifa->ifa_name);
+        }
+        else
+        {
+			ip_addrs.push_back(buf);
+			count++;
+        }
+    }
+
+    freeifaddrs(myaddrs);
+	return count;
+}
+
+
 XiaomiGateway::XiaomiGateway(const int ID)
 {
 	m_HwdID = ID;
