@@ -12,6 +12,7 @@
 #include <openssl/aes.h>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <ifaddrs.h>
 
 /*
 Xiaomi (Aqara) makes a smart home gateway/hub that has support
@@ -796,7 +797,34 @@ void XiaomiGateway::Do_Work()
 		}
 	}
 	catch (std::exception& e) {
-		_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Could not detect local IP address: %s", m_HwdID, e.what());
+		_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Could not detect local IP address using Boost.Asio: %s", m_HwdID, e.what());
+	}
+	
+	// try finding local ip using ifaddrs when Boost.Asio fails
+	if (m_LocalIp == "") {
+		try {
+			// get first 2 octets of Xiaomi gateway ip to search for similar ip address
+			std::string compareIp = m_GatewayIp.substr(0, (m_GatewayIp.length() - 3));
+			_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): IP address starts with: %s", m_HwdID, compareIp.c_str());	
+			
+			std::vector<std::string> ip_addrs;
+			if (get_ipaddr(ip_addrs) > 0) {
+				for(const std::string &addr : ip_addrs) {
+					std::size_t found = addr.c_str().find(compareIp);
+					if (found != std::string::npos) {
+						m_LocalIp = addr.c_str();
+						_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Using %s for local IP address.", m_HwdID, m_LocalIp.c_str());
+						break;
+					}
+				}
+			}
+			else {
+				_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Could not find local IP address with ifaddrs", m_HwdID);	
+			}
+		}
+		catch (std::exception& e) {
+			_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Could not find local IP address with ifaddrs: %s", m_HwdID, e.what());
+		}
 	}
 
 	XiaomiGateway::xiaomi_udp_server udp_server(io_service, m_HwdID, m_GatewayIp, m_LocalIp, m_ListenPort9898, m_OutputMessage, m_IncludeVoltage, this);
