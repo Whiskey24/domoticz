@@ -108,7 +108,7 @@ void XiaomiGateway::RemoveFromGatewayList()
 // Use this function to get local ip addresses via getifaddrs when boost asio approach fails
 // Adds the addresses found to the supplied vector and returns the count
 // Code from Stack Overflow - https://stackoverflow.com/questions/2146191
-int get_local_ipaddr(std::vector<std::string>& ip_addrs)
+int XiaomiGateway::get_local_ipaddr(std::vector<std::string>& ip_addrs)
 {
     struct ifaddrs *myaddrs, *ifa;
     void *in_addr;
@@ -805,14 +805,14 @@ void XiaomiGateway::Do_Work()
 		try {
 			// get first 2 octets of Xiaomi gateway ip to search for similar ip address
 			std::string compareIp = m_GatewayIp.substr(0, (m_GatewayIp.length() - 3));
-			_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): IP address starts with: %s", m_HwdID, compareIp.c_str());	
+			_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): XiaomiGateway IP address starts with: %s", m_HwdID, compareIp.c_str());	
 			
 			std::vector<std::string> ip_addrs;
-			if (get_local_ipaddr(ip_addrs) > 0) {
+			if (XiaomiGateway::get_local_ipaddr(ip_addrs) > 0) {
 				for(const std::string &addr : ip_addrs) {
-					std::size_t found = addr.c_str().find(compareIp);
+					std::size_t found = addr.find(compareIp);
 					if (found != std::string::npos) {
-						m_LocalIp = addr.c_str();
+						m_LocalIp = addr;
 						_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Using %s for local IP address.", m_HwdID, m_LocalIp.c_str());
 						break;
 					}
