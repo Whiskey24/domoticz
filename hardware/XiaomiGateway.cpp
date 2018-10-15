@@ -1347,7 +1347,7 @@ void XiaomiGateway::xiaomi_udp_server::handle_receive(const boost::system::error
 		start_receive();
 	}
 	else {
-		_log.Log(LOG_ERROR, "XiaomiGateway: error in handle_receive %d", error);
+		_log.Log(LOG_ERROR, "XiaomiGateway: error in handle_receive %s", error.message().c_str());
 	}
 
 }
