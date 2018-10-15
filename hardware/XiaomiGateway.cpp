@@ -808,7 +808,7 @@ void XiaomiGateway::Do_Work()
 			_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): IP address starts with: %s", m_HwdID, compareIp.c_str());	
 			
 			std::vector<std::string> ip_addrs;
-			if (get_ipaddr(ip_addrs) > 0) {
+			if (get_local_ipaddr(ip_addrs) > 0) {
 				for(const std::string &addr : ip_addrs) {
 					std::size_t found = addr.c_str().find(compareIp);
 					if (found != std::string::npos) {
