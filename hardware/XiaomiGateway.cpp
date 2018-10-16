@@ -105,62 +105,62 @@ void XiaomiGateway::RemoveFromGatewayList()
 	}
 }
 
-// Use this function to get local ip addresses via getifaddrs when boost asio approach fails
+// Use this function to get local ip addresses via getifaddrs when Boost.Asio approach fails
 // Adds the addresses found to the supplied vector and returns the count
 // Code from Stack Overflow - https://stackoverflow.com/questions/2146191
 int XiaomiGateway::get_local_ipaddr(std::vector<std::string>& ip_addrs)
 {
-    struct ifaddrs *myaddrs, *ifa;
-    void *in_addr;
-    char buf[64];
+	struct ifaddrs *myaddrs, *ifa;
+	void *in_addr;
+	char buf[64];
 	int count = 0;
 
-    if(getifaddrs(&myaddrs) != 0)
-    {
+	if(getifaddrs(&myaddrs) != 0)
+	{
 		_log.Log(LOG_ERROR, "getifaddrs failed! (when trying to determine local ip address)");
-        perror("getifaddrs");
-        exit(1);
-    }
+		perror("getifaddrs");
+		exit(1);
+	}
 
-    for (ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
-    {
-        if (ifa->ifa_addr == NULL)
-            continue;
-        if (!(ifa->ifa_flags & IFF_UP))
-            continue;
+	for (ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next)
+	{
+		if (ifa->ifa_addr == NULL)
+			continue;
+		if (!(ifa->ifa_flags & IFF_UP))
+			continue;
 
-        switch (ifa->ifa_addr->sa_family)
-        {
-            case AF_INET:
-            {
-                struct sockaddr_in *s4 = (struct sockaddr_in *)ifa->ifa_addr;
-                in_addr = &s4->sin_addr;
-                break;
-            }
+		switch (ifa->ifa_addr->sa_family)
+		{
+			case AF_INET:
+			{
+				struct sockaddr_in *s4 = (struct sockaddr_in *)ifa->ifa_addr;
+				in_addr = &s4->sin_addr;
+				break;
+			}
 
-            case AF_INET6:
-            {
-                struct sockaddr_in6 *s6 = (struct sockaddr_in6 *)ifa->ifa_addr;
-                in_addr = &s6->sin6_addr;
-                break;
-            }
+			case AF_INET6:
+			{
+				struct sockaddr_in6 *s6 = (struct sockaddr_in6 *)ifa->ifa_addr;
+				in_addr = &s6->sin6_addr;
+				break;
+			}
 
-            default:
-                continue;
-        }
+			default:
+				continue;
+		}
 
-        if (!inet_ntop(ifa->ifa_addr->sa_family, in_addr, buf, sizeof(buf)))
-        {
+		if (!inet_ntop(ifa->ifa_addr->sa_family, in_addr, buf, sizeof(buf)))
+		{
 			_log.Log(LOG_ERROR, "Could not convert to IP address, inet_ntop failed for interface %s", ifa->ifa_name);
-        }
-        else
-        {
+		}
+		else
+		{
 			ip_addrs.push_back(buf);
 			count++;
-        }
-    }
+		}
+	}
 
-    freeifaddrs(myaddrs);
+	freeifaddrs(myaddrs);
 	return count;
 }
 
@@ -808,17 +808,21 @@ void XiaomiGateway::Do_Work()
 			_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): XiaomiGateway IP address starts with: %s", m_HwdID, compareIp.c_str());	
 			
 			std::vector<std::string> ip_addrs;
-			if (XiaomiGateway::get_local_ipaddr(ip_addrs) > 0) {
-				for(const std::string &addr : ip_addrs) {
+			if (XiaomiGateway::get_local_ipaddr(ip_addrs) > 0)
+			{
+				for(const std::string &addr : ip_addrs) 
+				{
 					std::size_t found = addr.find(compareIp);
-					if (found != std::string::npos) {
+					if (found != std::string::npos) 
+					{
 						m_LocalIp = addr;
 						_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Using %s for local IP address.", m_HwdID, m_LocalIp.c_str());
 						break;
 					}
 				}
 			}
-			else {
+			else 
+			{
 				_log.Log(LOG_STATUS, "XiaomiGateway (ID=%d): Could not find local IP address with ifaddrs", m_HwdID);	
 			}
 		}
